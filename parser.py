@@ -1,6 +1,6 @@
 import xlrd
 
-from i2amparis_main.models import
+from i2amparis_main.models import *
 
 class Parser:
     def __init__(self, excel_name):
