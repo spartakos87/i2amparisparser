@@ -179,10 +179,9 @@ class Parser:
 
 
 class ImportData:
-    def __init__(self, excel_name, model_name):
+    def __init__(self, excel_name):
         self.excel_name = excel_name
-        self.model_name = model_name
-        self.retrieve_data = Parser(self.excel_name, self.model_name).return_data()
+        self.retrieve_data = Parser(self.excel_name).return_data()
 
     def _load_model(self):
         """
