@@ -83,7 +83,7 @@ class Parser:
         """
         sheet_name = self.sheets_name[3]
         # The actual data have range for row=[1,10] and col=[0,1]
-        self.emissions_dict = self._retrieve_data(range(0, 11), range(0, 2), sheet_name, self._return_sheet(sheet_name))
+        self.emissions_dict = self._retrieve_data(range(1, 11), range(0, 2), sheet_name, self._return_sheet(sheet_name))
 
     def _policies(self):
         """
@@ -121,9 +121,10 @@ class Parser:
         coverage = ""
         partener = sheet.cell_value(3, 1)
         type_of_model = sheet.cell_value(4, 1)
-        time_horizon = ""
-        time_steps_in_solution = ""
-        temp = [model_name,model_title,long_title, partener, type_of_model, time_horizon, time_steps_in_solution, long_description,short_description, icon, coverage]
+        time_horizon = 0
+        time_steps_in_solution = 0
+        temp = [model_name, model_title, long_title, partener, type_of_model, time_horizon, time_steps_in_solution,
+                long_description,short_description, icon, coverage]
         self.model_dict = {
                             "Model": temp
                                     }
@@ -196,6 +197,8 @@ class ImportData:
         new_model_ordering = max(ModelsInfo.objects.all().values_list('ordering', flat=True)) + 1
         # At the begin add new id and at index -2 add new ordering
         new_model = [self.new_model_id]+new_model[:-1]+[new_model_ordering]+[new_model[-1]]
+        new_model = ModelsInfo(*new_model)
+        new_model.save()
         # Return model object
         self.model_obj = ModelsInfo.objects.get(id=self.new_model_id)
 
@@ -224,7 +227,8 @@ class ImportData:
             # index 0 contains the category of policy
             # index 1 contains the policy/name
             # index 2 contains the state of policy
-            policy_name_obj = PoliciesName.objects.get(policies_name=policy[1])
+            policy_cat_obj = PoliciesCat.objects.get(policies_cat=policy[0])
+            policy_name_obj = PoliciesName.objects.get(policies_name=policy[1], policies_cat_id=policy_cat_obj.id)
             policy_temp = PoliciesStates(model_id=self.model_obj, policies_name_id=policy_name_obj, state=policy[-1])
             policy_temp.save()
 
@@ -238,22 +242,25 @@ class ImportData:
             # sdg is list with length equal to two
             # index 0 contains the title of sdg
             # index 1 contains the name of sdg
-            sdg_obj = SdgsCat.objects.get(sdgs_title=sdg[0])
-            sdg_temp = SdgsName(sdgs_name=sdg[1], model_id=self.model_obj, sdgs_cat_id=sdg_obj)
-            sdg_temp.save()
+            # TODO check it
+            if sdg[1] != '':
+                sdg_obj = SdgsCat.objects.get(sdgs_title=sdg[0])
+                sdg_temp = SdgsName(sdgs_name=sdg[1], model_id=self.model_obj, sdgs_cat_id=sdg_obj)
+                sdg_temp.save()
 
     def _load_socioecons(self):
         """
 
         :return:
         """
-        new_socioecon = self.retrieve_data['SocioEcons']
+        new_socioecons = self.retrieve_data['SocioEcons']
         for socioecon in new_socioecons:
             # socioecon is a list with length equal to three
             # index 0 contains the category category of socioeco
             # index 1 contains the socioecon/name category of socioeco
             # index 2 contains the model coverage/state category of socioeco
-            socioecon_name_obj = SocioeconsName.objects.get(socioecons_name=socioecon[1])
+            socioecon_cat_obj = SocioeconsCat.objects.get(socioecons_cat=socioecon[0])
+            socioecon_name_obj = SocioeconsName.objects.get(socioecons_name=socioecon[1], socioecons_cat_id=socioecon_cat_obj.id)
             socioecon_temp = SocioeconsStates(state=socioecon[-1], model_id=self.model_obj,
                                               socioecons_name_id=socioecon_name_obj)
             socioecon_temp.save()
@@ -301,6 +308,17 @@ class ImportData:
             # index 3 contains the model coverage of adaptation
             adaptation_name_obj = AdaptationName.objects.get(adaptation_name=adaptation[2])
             adaptation_name_obj.model_id.add(self.model_obj)
+        for mitigation in mitigations:
+            # mitigation is a list with length equal to four
+            # index 0 contains the category of mitigation
+            # index 1 contains the subcategory of mitigation
+            # index 2 contains the name of mitigation
+            # index 3 contains the model coverage of mitigation
+            mitigation_cat_obj = MitigationsCat.objects.get(mitigations_cat=mitigation[0])
+            mitigation_subcat_obj = MitigationsSubCat.objects.get(mitigations_sub_cat=mitigation[1], mitigations_cat_id=mitigation_cat_obj.id)
+            mitigation_name_obj = MitigationsName.objects.get(mitigations_name=mitigation[2], mitigations_sub_cat_id =mitigation_subcat_obj.id,)
+            mitigation_name_obj.model_id.add(self.model_obj)
+
 
     def _load_regions(self):
         """
