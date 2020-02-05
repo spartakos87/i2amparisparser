@@ -1,12 +1,10 @@
 import xlrd
 
-from i2amparis_main.models import *
-
+from i2amparis_main.models import
 
 class Parser:
-    def __init__(self, excel_name, model_name):
+    def __init__(self, excel_name):
         self.excel_loc = (excel_name)
-        self.model_name = model_name
         self.data_dict = {}
         self.wb = xlrd.open_workbook(self.excel_loc)
         self.sheets_name = [
@@ -94,7 +92,7 @@ class Parser:
         """
         sheet_name = self.sheets_name[4]
         # The actual data have range for row=[1,18] and col=[0,2]
-        self.policies_dict = self._retrieve_data(range(1, 19), range(0, 3), sheet_name, self._retrieve_data(sheet_name))
+        self.policies_dict = self._retrieve_data(range(1, 19), range(0, 3), sheet_name, self._return_sheet(sheet_name))
 
     def _sdgs(self):
         """
@@ -112,8 +110,9 @@ class Parser:
         """
         sheet_name = self.sheets_name[6]
         sheet = self._return_sheet(sheet_name)
-        model_name = self.model_name
         model_title = sheet.cell_value(0, 1)
+        # For model name use the Model acronym with no spaces and all char lower
+        model_name = "".join(model_title.split()).lower()
         long_title = sheet.cell_value(1, 1)
         long_description = sheet.cell_value(5, 1)
         short_description = sheet.cell_value(2, 1)
@@ -157,6 +156,14 @@ class Parser:
 
         :return:
         """
+        self._regions()
+        self._model_info()
+        self._sdgs()
+        self._policies()
+        self._emissions()
+        self._socioecons()
+        self._mitigationadaptation()
+        self._sectors()
         return_dict = {}
         return_dict.update(self.regions_dict)
         return_dict.update(self.model_dict)
@@ -166,6 +173,7 @@ class Parser:
         return_dict.update(self.socioecons_dict)
         return_dict.update(self.mitigationadaptation_dict)
         return_dict.update(self.sector_dict)
+        return  return_dict
 
 
 
@@ -302,19 +310,3 @@ class ImportData:
         """
         new_regions = self.retrieve_data['Regions']
         return new_regions
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
