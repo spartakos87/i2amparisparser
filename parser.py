@@ -326,4 +326,58 @@ class ImportData:
         :return:
         """
         new_regions = self.retrieve_data['Regions']
-        return new_regions
+        """
+        How we get the regions?
+        1st case
+        The user input the region only ones. In that case loop until find another region name, until then all countries
+        belong to first metion region
+        2nd case
+        User write each time the name of region. Again the countries until find another region name belong to the first
+        one
+        How we named the new entry region?
+        Because possible we would have cases which there are two regions with same name, but they are included different
+        countries, the name of region would be,
+        given name, without spaces and all char lowercase follow by _<name of model which belong>
+        """
+        temp_region = None
+        countries_list = []
+        for k,region in enumerate(new_regions):
+            # region is a list with length equal to three
+            # 0 index contains region
+            # 1 index contains country name
+            # 2 index contains country code
+            region_name = region[0]
+            country_name = region[1]
+            country_code = region[2]
+            if temp_region is None:
+                temp_region = region_name
+            if region_name == "" or region_name == temp_region:
+                # Load country to countries_list
+                countries_list.append([country_name, country_code])
+            if region_name != "" and region_name != temp_region or k+1 == len(new_regions):
+                """
+                End of the region.
+                Load the previous region in db, give new value to temp_region and empty countries_list
+                """
+                # Create the name of the region
+                new_region_name = "".join(temp_region.split()).lower() + "_" + self.model_obj.model_name
+                # The descr contains all countries names of countries_list
+                descr = ",".join(list(map(lambda x: x[0], countries_list)))
+                # Save the region
+                region_obj = Regions(region_name=new_region_name, region_title=temp_region, descr=descr)
+                region_obj.save()
+                region_obj.model_name.add(self.model_obj)
+                # Save the countries
+                for country_list in countries_list:
+                    temp_country_name, temp_country_code = country_list
+                    # First check if the country is exist, use country code
+                    if Countries.objects.filter(country_code=country_code).exists():
+                        # if exist get the first object, there is a case which country exist more than ones in db
+                        country_obj = Countries.objects.filter(country_code=temp_country_code).first()
+                    else:
+                        country_obj = Countries(country_name=temp_country_name, country_code=temp_country_code)
+                        country_obj.save()
+                    country_obj.region_name.add(region_obj)
+                # Set new temp_region and countries_list
+                temp_region = region_name
+                countries_list = [[country_name, country_code]]
