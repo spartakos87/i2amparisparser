@@ -319,7 +319,6 @@ class ImportData:
             mitigation_name_obj = MitigationsName.objects.get(mitigations_name=mitigation[2], mitigations_sub_cat_id =mitigation_subcat_obj.id,)
             mitigation_name_obj.model_id.add(self.model_obj)
 
-
     def _load_regions(self):
         """
 
@@ -381,3 +380,17 @@ class ImportData:
                 # Set new temp_region and countries_list
                 temp_region = region_name
                 countries_list = [[country_name, country_code]]
+
+    def import_to_db(self):
+        """
+
+        :return:
+        """
+        self._load_model()
+        self._load_regions()
+        self._load_emissions()
+        self._load_policies()
+        self._load_sdgs()
+        self._load_socioecons()
+        self._load_sectors()
+        self._load_mitigationadaptation()
