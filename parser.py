@@ -8,9 +8,9 @@ class Parser:
         self.data_dict = {}
         self.wb = xlrd.open_workbook(self.excel_loc)
         self.sheets_name = [
-                                'Sectos',
+                                'Sectors',
                                 'MitigationAdaptation',
-                                'SocioEcons',
+                                'SocioEcon',
                                 'Emissions',
                                 'Policies',
                                 'SDGs',
@@ -253,7 +253,7 @@ class ImportData:
 
         :return:
         """
-        new_socioecons = self.retrieve_data['SocioEcons']
+        new_socioecons = self.retrieve_data['SocioEcon']
         for socioecon in new_socioecons:
             # socioecon is a list with length equal to three
             # index 0 contains the category category of socioeco
@@ -270,7 +270,7 @@ class ImportData:
 
         :return:
         """
-        new_sectors = self.retrieve_data['Sectos']
+        new_sectors = self.retrieve_data['Sectors']
         # Filter all the sectors which model coverage is equal to No
         new_sectors = list(filter(lambda x:x[-1]!='No', new_sectors))
         for sector in new_sectors:
